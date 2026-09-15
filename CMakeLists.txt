@@ -57,6 +57,7 @@ if(BUILD_TESTING)
         tests/shm_region_test.cpp
         tests/shm_queue_process_test.cpp
         tests/shm_queue_batch_test.cpp
+        tests/state_store_test.cpp
     )
 
     target_link_libraries(pulsegrid_tests
