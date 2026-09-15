@@ -207,6 +207,107 @@ public:
     }
 
     [[nodiscard]]
+    bool try_push_batch(
+        const Update* updates,
+        std::size_t count
+    ) noexcept {
+        if (count == 0) {
+            return true;
+        }
+
+        if (count > Capacity) {
+            return false;
+        }
+
+        const auto head =
+            layout_->head.value.load(
+                std::memory_order_relaxed
+            );
+
+        const auto tail =
+            layout_->tail.value.load(
+                std::memory_order_acquire
+            );
+
+        const auto used = head - tail;
+        const auto available = Capacity - used;
+
+        if (count > available) {
+            return false;
+        }
+
+        for (std::size_t i = 0;
+             i < count;
+             ++i) {
+
+            layout_->entries[
+                static_cast<std::size_t>(
+                    head + i
+                ) & kMask
+            ] = updates[i];
+        }
+
+        layout_->head.value.store(
+            head + count,
+            std::memory_order_release
+        );
+
+        return true;
+    }
+
+    [[nodiscard]]
+    std::size_t try_pop_batch(
+        Update* updates,
+        std::size_t max_count
+    ) noexcept {
+        if (max_count == 0) {
+            return 0;
+        }
+
+        const auto tail =
+            layout_->tail.value.load(
+                std::memory_order_relaxed
+            );
+
+        const auto head =
+            layout_->head.value.load(
+                std::memory_order_acquire
+            );
+
+        const auto available = head - tail;
+
+        const auto count =
+            static_cast<std::size_t>(
+                available < max_count
+                    ? available
+                    : max_count
+            );
+
+        if (count == 0) {
+            return 0;
+        }
+
+        for (std::size_t i = 0;
+             i < count;
+             ++i) {
+
+            updates[i] =
+                layout_->entries[
+                    static_cast<std::size_t>(
+                        tail + i
+                    ) & kMask
+                ];
+        }
+
+        layout_->tail.value.store(
+            tail + count,
+            std::memory_order_release
+        );
+
+        return count;
+    }
+
+    [[nodiscard]]
     bool try_pop(Update& update) noexcept {
         const auto tail =
             layout_->tail.value.load(

@@ -1,0 +1,100 @@
+=== trial 1 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=4212.03
+p50_ns=3625
+p95_ns=6125
+p99_ns=11042
+p999_ns=45708
+max_ns=5898250
+=== trial 2 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=3985.14
+p50_ns=3625
+p95_ns=5833
+p99_ns=7916
+p999_ns=26792
+max_ns=912834
+=== trial 3 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=4002.45
+p50_ns=3584
+p95_ns=5958
+p99_ns=8375
+p999_ns=31750
+max_ns=742334
+=== trial 4 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=4012.22
+p50_ns=3625
+p95_ns=5958
+p99_ns=7958
+p999_ns=24792
+max_ns=2838000
+=== trial 5 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=3953.46
+p50_ns=3625
+p95_ns=5959
+p99_ns=7875
+p999_ns=15125
+max_ns=246334
+=== trial 6 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=4060.31
+p50_ns=3625
+p95_ns=5875
+p99_ns=7916
+p999_ns=23625
+max_ns=17713250
+=== trial 7 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=3972.45
+p50_ns=3625
+p95_ns=6041
+p99_ns=7916
+p999_ns=15125
+max_ns=245291
+=== trial 8 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=3965.72
+p50_ns=3625
+p95_ns=5833
+p99_ns=7708
+p999_ns=21375
+max_ns=431917
+=== trial 9 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=3931.78
+p50_ns=3584
+p95_ns=5916
+p99_ns=7875
+p999_ns=16125
+max_ns=234708
+=== trial 10 ===
+measurement=round_trip
+samples=1000000
+transport=unix_socket
+mean_ns=4226.08
+p50_ns=3625
+p95_ns=6125
+p99_ns=11208
+p999_ns=45542
+max_ns=27845792

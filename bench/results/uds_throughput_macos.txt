@@ -1,0 +1,60 @@
+=== trial 1 ===
+transport=unix_socket
+messages=10000000
+seconds=5.166
+messages_per_second=1935767.383
+gib_per_second=0.058
+=== trial 2 ===
+transport=unix_socket
+messages=10000000
+seconds=4.963
+messages_per_second=2015002.077
+gib_per_second=0.060
+=== trial 3 ===
+transport=unix_socket
+messages=10000000
+seconds=4.959
+messages_per_second=2016402.917
+gib_per_second=0.060
+=== trial 4 ===
+transport=unix_socket
+messages=10000000
+seconds=5.016
+messages_per_second=1993710.541
+gib_per_second=0.059
+=== trial 5 ===
+transport=unix_socket
+messages=10000000
+seconds=4.920
+messages_per_second=2032676.976
+gib_per_second=0.061
+=== trial 6 ===
+transport=unix_socket
+messages=10000000
+seconds=4.989
+messages_per_second=2004449.276
+gib_per_second=0.060
+=== trial 7 ===
+transport=unix_socket
+messages=10000000
+seconds=4.989
+messages_per_second=2004282.350
+gib_per_second=0.060
+=== trial 8 ===
+transport=unix_socket
+messages=10000000
+seconds=4.931
+messages_per_second=2028171.145
+gib_per_second=0.060
+=== trial 9 ===
+transport=unix_socket
+messages=10000000
+seconds=4.945
+messages_per_second=2022356.920
+gib_per_second=0.060
+=== trial 10 ===
+transport=unix_socket
+messages=10000000
+seconds=4.974
+messages_per_second=2010649.472
+gib_per_second=0.060

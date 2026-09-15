@@ -56,6 +56,7 @@ if(BUILD_TESTING)
         tests/wraparound_test.cpp
         tests/shm_region_test.cpp
         tests/shm_queue_process_test.cpp
+        tests/shm_queue_batch_test.cpp
     )
 
     target_link_libraries(pulsegrid_tests
@@ -67,3 +68,119 @@ if(BUILD_TESTING)
     include(GoogleTest)
     gtest_discover_tests(pulsegrid_tests)
 endif()
+
+# Benchmarks
+
+add_executable(
+    pulsegrid_shm_throughput
+    bench/shm_throughput.cpp
+)
+
+target_link_libraries(
+    pulsegrid_shm_throughput
+    PRIVATE
+        pulsegrid
+)
+
+target_compile_options(
+    pulsegrid_shm_throughput
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+)
+
+add_executable(
+    pulsegrid_uds_throughput
+    bench/uds_throughput.cpp
+)
+
+target_link_libraries(
+    pulsegrid_uds_throughput
+    PRIVATE
+        pulsegrid
+)
+
+target_compile_options(
+    pulsegrid_uds_throughput
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+)
+
+add_executable(
+    pulsegrid_shm_latency
+    bench/shm_latency.cpp
+)
+
+target_link_libraries(
+    pulsegrid_shm_latency
+    PRIVATE
+        pulsegrid
+)
+
+target_compile_options(
+    pulsegrid_shm_latency
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+)
+
+add_executable(
+    pulsegrid_uds_latency
+    bench/uds_latency.cpp
+)
+
+target_link_libraries(
+    pulsegrid_uds_latency
+    PRIVATE
+        pulsegrid
+)
+
+target_compile_options(
+    pulsegrid_uds_latency
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+)
+
+add_executable(
+    pulsegrid_uds_batched_throughput
+    bench/uds_batched_throughput.cpp
+)
+
+target_link_libraries(
+    pulsegrid_uds_batched_throughput
+    PRIVATE
+        pulsegrid
+)
+
+target_compile_options(
+    pulsegrid_uds_batched_throughput
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+)
+
+add_executable(
+    pulsegrid_shm_batched_throughput
+    bench/shm_batched_throughput.cpp
+)
+
+target_link_libraries(
+    pulsegrid_shm_batched_throughput
+    PRIVATE
+        pulsegrid
+)
+
+target_compile_options(
+    pulsegrid_shm_batched_throughput
+    PRIVATE
+        -Wall
+        -Wextra
+        -Wpedantic
+)

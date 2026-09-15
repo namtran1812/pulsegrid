@@ -1,0 +1,280 @@
+transport=uds trial=1 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.780
+messages_per_second=1755091.121
+gib_per_second=0.052
+transport=uds trial=2 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.169
+messages_per_second=2012014.266
+gib_per_second=0.060
+transport=uds trial=3 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.107
+messages_per_second=2042675.276
+gib_per_second=0.061
+transport=uds trial=4 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.141
+messages_per_second=2025606.482
+gib_per_second=0.060
+transport=uds trial=5 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.119
+messages_per_second=2036745.831
+gib_per_second=0.061
+transport=uds trial=6 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.186
+messages_per_second=2004021.669
+gib_per_second=0.060
+transport=uds trial=7 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.163
+messages_per_second=2015036.371
+gib_per_second=0.060
+transport=uds trial=8 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.839
+messages_per_second=1733497.026
+gib_per_second=0.052
+transport=uds trial=9 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.721
+messages_per_second=1776940.916
+gib_per_second=0.053
+transport=uds trial=10 batch=1
+batch_size=1
+transport=unix_socket_batched
+messages=8388608
+seconds=4.737
+messages_per_second=1770917.335
+gib_per_second=0.053
+transport=uds trial=1 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.354
+messages_per_second=23723972.905
+gib_per_second=0.707
+transport=uds trial=2 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.344
+messages_per_second=24416494.055
+gib_per_second=0.728
+transport=uds trial=3 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.337
+messages_per_second=24916336.720
+gib_per_second=0.743
+transport=uds trial=4 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.343
+messages_per_second=24466069.934
+gib_per_second=0.729
+transport=uds trial=5 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.340
+messages_per_second=24682833.426
+gib_per_second=0.736
+transport=uds trial=6 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.330
+messages_per_second=25425565.244
+gib_per_second=0.758
+transport=uds trial=7 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.340
+messages_per_second=24663025.122
+gib_per_second=0.735
+transport=uds trial=8 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.339
+messages_per_second=24730013.185
+gib_per_second=0.737
+transport=uds trial=9 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.330
+messages_per_second=25450098.470
+gib_per_second=0.758
+transport=uds trial=10 batch=16
+batch_size=16
+transport=unix_socket_batched
+messages=8388608
+seconds=0.340
+messages_per_second=24678884.946
+gib_per_second=0.735
+transport=uds trial=1 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.108
+messages_per_second=77533382.320
+gib_per_second=2.311
+transport=uds trial=2 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.113
+messages_per_second=74536362.427
+gib_per_second=2.221
+transport=uds trial=3 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.124
+messages_per_second=67683178.511
+gib_per_second=2.017
+transport=uds trial=4 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.123
+messages_per_second=67970457.520
+gib_per_second=2.026
+transport=uds trial=5 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.126
+messages_per_second=66388985.919
+gib_per_second=1.979
+transport=uds trial=6 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.113
+messages_per_second=73971849.067
+gib_per_second=2.205
+transport=uds trial=7 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.133
+messages_per_second=63149258.006
+gib_per_second=1.882
+transport=uds trial=8 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.112
+messages_per_second=74714557.281
+gib_per_second=2.227
+transport=uds trial=9 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.127
+messages_per_second=65871791.751
+gib_per_second=1.963
+transport=uds trial=10 batch=64
+batch_size=64
+transport=unix_socket_batched
+messages=8388608
+seconds=0.128
+messages_per_second=65473318.505
+gib_per_second=1.951
+transport=uds trial=1 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.170
+messages_per_second=49329772.650
+gib_per_second=1.470
+transport=uds trial=2 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.171
+messages_per_second=48924339.188
+gib_per_second=1.458
+transport=uds trial=3 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.172
+messages_per_second=48877327.557
+gib_per_second=1.457
+transport=uds trial=4 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.172
+messages_per_second=48822685.077
+gib_per_second=1.455
+transport=uds trial=5 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.174
+messages_per_second=48210344.811
+gib_per_second=1.437
+transport=uds trial=6 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.139
+messages_per_second=60378131.598
+gib_per_second=1.799
+transport=uds trial=7 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.170
+messages_per_second=49440143.335
+gib_per_second=1.473
+transport=uds trial=8 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.171
+messages_per_second=49025367.094
+gib_per_second=1.461
+transport=uds trial=9 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.170
+messages_per_second=49315610.606
+gib_per_second=1.470
+transport=uds trial=10 batch=256
+batch_size=256
+transport=unix_socket_batched
+messages=8388608
+seconds=0.172
+messages_per_second=48886763.053
+gib_per_second=1.457

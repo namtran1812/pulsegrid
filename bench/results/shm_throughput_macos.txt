@@ -1,0 +1,60 @@
+=== trial 1 ===
+transport=shm
+messages=10000000
+seconds=0.383
+messages_per_second=26115348.402
+gib_per_second=0.778
+=== trial 2 ===
+transport=shm
+messages=10000000
+seconds=0.378
+messages_per_second=26434801.175
+gib_per_second=0.788
+=== trial 3 ===
+transport=shm
+messages=10000000
+seconds=0.397
+messages_per_second=25165222.773
+gib_per_second=0.750
+=== trial 4 ===
+transport=shm
+messages=10000000
+seconds=0.371
+messages_per_second=26931656.209
+gib_per_second=0.803
+=== trial 5 ===
+transport=shm
+messages=10000000
+seconds=0.376
+messages_per_second=26619222.339
+gib_per_second=0.793
+=== trial 6 ===
+transport=shm
+messages=10000000
+seconds=0.371
+messages_per_second=26966328.518
+gib_per_second=0.804
+=== trial 7 ===
+transport=shm
+messages=10000000
+seconds=0.371
+messages_per_second=26966625.430
+gib_per_second=0.804
+=== trial 8 ===
+transport=shm
+messages=10000000
+seconds=0.359
+messages_per_second=27830204.239
+gib_per_second=0.829
+=== trial 9 ===
+transport=shm
+messages=10000000
+seconds=0.388
+messages_per_second=25745476.359
+gib_per_second=0.767
+=== trial 10 ===
+transport=shm
+messages=10000000
+seconds=0.370
+messages_per_second=27014590.605
+gib_per_second=0.805

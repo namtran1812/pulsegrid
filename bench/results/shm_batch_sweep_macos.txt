@@ -1,0 +1,280 @@
+transport=shm trial=1 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.311
+messages_per_second=26936880.123
+gib_per_second=0.803
+transport=shm trial=2 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.340
+messages_per_second=24653086.011
+gib_per_second=0.735
+transport=shm trial=3 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.327
+messages_per_second=25639615.271
+gib_per_second=0.764
+transport=shm trial=4 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.323
+messages_per_second=25969009.738
+gib_per_second=0.774
+transport=shm trial=5 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.323
+messages_per_second=26006221.578
+gib_per_second=0.775
+transport=shm trial=6 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.343
+messages_per_second=24442431.920
+gib_per_second=0.728
+transport=shm trial=7 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.323
+messages_per_second=25961940.412
+gib_per_second=0.774
+transport=shm trial=8 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.324
+messages_per_second=25888148.652
+gib_per_second=0.772
+transport=shm trial=9 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.317
+messages_per_second=26465696.586
+gib_per_second=0.789
+transport=shm trial=10 batch=1
+batch_size=1
+transport=shm_batched
+messages=8388608
+seconds=0.314
+messages_per_second=26706370.996
+gib_per_second=0.796
+transport=shm trial=1 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.044
+messages_per_second=190879745.079
+gib_per_second=5.689
+transport=shm trial=2 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.043
+messages_per_second=194228699.943
+gib_per_second=5.788
+transport=shm trial=3 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.044
+messages_per_second=190653249.602
+gib_per_second=5.682
+transport=shm trial=4 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.043
+messages_per_second=193617144.539
+gib_per_second=5.770
+transport=shm trial=5 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.045
+messages_per_second=185932153.425
+gib_per_second=5.541
+transport=shm trial=6 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.043
+messages_per_second=196820583.144
+gib_per_second=5.866
+transport=shm trial=7 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.036
+messages_per_second=230213293.843
+gib_per_second=6.861
+transport=shm trial=8 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.046
+messages_per_second=182470791.726
+gib_per_second=5.438
+transport=shm trial=9 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.038
+messages_per_second=219009411.918
+gib_per_second=6.527
+transport=shm trial=10 batch=16
+batch_size=16
+transport=shm_batched
+messages=8388608
+seconds=0.046
+messages_per_second=180785069.287
+gib_per_second=5.388
+transport=shm trial=1 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.035
+messages_per_second=241300417.180
+gib_per_second=7.191
+transport=shm trial=2 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.039
+messages_per_second=212679192.938
+gib_per_second=6.338
+transport=shm trial=3 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.042
+messages_per_second=201831776.938
+gib_per_second=6.015
+transport=shm trial=4 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.037
+messages_per_second=226928688.446
+gib_per_second=6.763
+transport=shm trial=5 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.039
+messages_per_second=213067459.589
+gib_per_second=6.350
+transport=shm trial=6 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.039
+messages_per_second=216706470.376
+gib_per_second=6.458
+transport=shm trial=7 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.041
+messages_per_second=206003910.795
+gib_per_second=6.139
+transport=shm trial=8 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.040
+messages_per_second=209904113.702
+gib_per_second=6.256
+transport=shm trial=9 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.036
+messages_per_second=233891813.192
+gib_per_second=6.971
+transport=shm trial=10 batch=64
+batch_size=64
+transport=shm_batched
+messages=8388608
+seconds=0.042
+messages_per_second=197682899.220
+gib_per_second=5.891
+transport=shm trial=1 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.037
+messages_per_second=227182458.409
+gib_per_second=6.771
+transport=shm trial=2 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.038
+messages_per_second=221448271.263
+gib_per_second=6.600
+transport=shm trial=3 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.036
+messages_per_second=233303657.968
+gib_per_second=6.953
+transport=shm trial=4 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.041
+messages_per_second=205620776.292
+gib_per_second=6.128
+transport=shm trial=5 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.035
+messages_per_second=240918396.618
+gib_per_second=7.180
+transport=shm trial=6 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.035
+messages_per_second=240816099.565
+gib_per_second=7.177
+transport=shm trial=7 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.037
+messages_per_second=228959222.665
+gib_per_second=6.824
+transport=shm trial=8 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.036
+messages_per_second=232211405.576
+gib_per_second=6.920
+transport=shm trial=9 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.036
+messages_per_second=231702837.734
+gib_per_second=6.905
+transport=shm trial=10 batch=256
+batch_size=256
+transport=shm_batched
+messages=8388608
+seconds=0.038
+messages_per_second=222306306.877
+gib_per_second=6.625

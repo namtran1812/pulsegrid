@@ -1,0 +1,100 @@
+=== trial 1 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=307.22
+p50_ns=250
+p95_ns=500
+p99_ns=791
+p999_ns=1166
+max_ns=304375
+=== trial 2 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=333.79
+p50_ns=250
+p95_ns=500
+p99_ns=791
+p999_ns=8041
+max_ns=1347125
+=== trial 3 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=331.45
+p50_ns=250
+p95_ns=500
+p99_ns=667
+p999_ns=10042
+max_ns=1048500
+=== trial 4 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=327.86
+p50_ns=250
+p95_ns=500
+p99_ns=833
+p999_ns=5208
+max_ns=1098709
+=== trial 5 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=394.57
+p50_ns=250
+p95_ns=542
+p99_ns=1125
+p999_ns=16417
+max_ns=10015583
+=== trial 6 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=307.96
+p50_ns=250
+p95_ns=500
+p99_ns=791
+p999_ns=1250
+max_ns=777334
+=== trial 7 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=296.12
+p50_ns=250
+p95_ns=500
+p99_ns=709
+p999_ns=1166
+max_ns=179084
+=== trial 8 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=307.27
+p50_ns=250
+p95_ns=541
+p99_ns=750
+p999_ns=1125
+max_ns=124584
+=== trial 9 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=304.92
+p50_ns=250
+p95_ns=541
+p99_ns=750
+p999_ns=1166
+max_ns=607542
+=== trial 10 ===
+measurement=round_trip
+samples=1000000
+transport=shm
+mean_ns=306.62
+p50_ns=250
+p95_ns=500
+p99_ns=750
+p999_ns=1167
+max_ns=74042
