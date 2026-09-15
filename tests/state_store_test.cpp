@@ -11,7 +11,7 @@ pulsegrid::Update make_uint_update(
     std::uint32_t table,
     std::uint32_t row,
     std::uint16_t column,
-    std::uint32_t sequence,
+    std::uint64_t sequence,
     std::uint64_t value
 ) {
     return {
@@ -20,7 +20,6 @@ pulsegrid::Update make_uint_update(
         .column_id = column,
         .type = pulsegrid::ValueType::UInt64,
         .sequence = sequence,
-        .timestamp_ns = sequence,
         .payload = value
     };
 }
@@ -113,7 +112,6 @@ TEST(StateStore, SupportsAllValueTypes) {
         .column_id = 1,
         .type = pulsegrid::ValueType::Int64,
         .sequence = 1,
-        .timestamp_ns = 1,
         .payload =
             std::bit_cast<std::uint64_t>(
                 std::int64_t{-42}
@@ -126,7 +124,6 @@ TEST(StateStore, SupportsAllValueTypes) {
         .column_id = 2,
         .type = pulsegrid::ValueType::Double,
         .sequence = 2,
-        .timestamp_ns = 2,
         .payload =
             std::bit_cast<std::uint64_t>(
                 3.14159
@@ -404,7 +401,7 @@ TEST(StateStore, SnapshotReplayMatchesUninterruptedState) {
     pulsegrid::StateStore before_snapshot;
 
     auto make_stream_update =
-        [](std::uint32_t sequence) {
+        [](std::uint64_t sequence) {
             const auto row =
                 sequence % kRows;
 
@@ -424,7 +421,7 @@ TEST(StateStore, SnapshotReplayMatchesUninterruptedState) {
             );
         };
 
-    for (std::uint32_t sequence = 1;
+    for (std::uint64_t sequence = 1;
          sequence <= kSnapshotSequence;
          ++sequence) {
 
@@ -444,7 +441,7 @@ TEST(StateStore, SnapshotReplayMatchesUninterruptedState) {
         );
 
     for (
-        std::uint32_t sequence =
+        std::uint64_t sequence =
             kSnapshotSequence + 1;
         sequence <= kFinalSequence;
         ++sequence
@@ -520,10 +517,6 @@ TEST(StateStore, SnapshotReplayMatchesUninterruptedState) {
                 actual->sequence
             );
 
-            EXPECT_EQ(
-                expected->timestamp_ns,
-                actual->timestamp_ns
-            );
         }
     }
 }
@@ -531,7 +524,7 @@ TEST(StateStore, SnapshotReplayMatchesUninterruptedState) {
 TEST(StateStore, DetectsMissingDeltaDuringReplay) {
     pulsegrid::StateStore original;
 
-    for (std::uint32_t sequence = 1;
+    for (std::uint64_t sequence = 1;
          sequence <= 1'000;
          ++sequence) {
 
@@ -638,7 +631,7 @@ TEST(StateStore, RejectsSnapshotCellBeyondWatermark) {
     };
 
     EXPECT_THROW(
-        pulsegrid::StateStore::restore(
+        (void)pulsegrid::StateStore::restore(
             snapshot
         ),
         std::runtime_error
@@ -659,7 +652,7 @@ TEST(StateStore, RejectsDuplicateCellsInSnapshot) {
     };
 
     EXPECT_THROW(
-        pulsegrid::StateStore::restore(
+        (void)pulsegrid::StateStore::restore(
             snapshot
         ),
         std::runtime_error
@@ -677,7 +670,7 @@ TEST(StateStore, RejectsNonEmptyZeroSequenceSnapshot) {
     };
 
     EXPECT_THROW(
-        pulsegrid::StateStore::restore(
+        (void)pulsegrid::StateStore::restore(
             snapshot
         ),
         std::runtime_error
@@ -697,4 +690,74 @@ TEST(StateStore, RestoresEmptySnapshot) {
 
     EXPECT_EQ(restored.size(), 0);
     EXPECT_FALSE(restored.last_sequence());
+}
+
+TEST(StateStore, SnapshotUsesCanonicalCellOrder) {
+    pulsegrid::StateStore store;
+
+    store.apply(
+        make_uint_update(
+            2, 1, 1, 1, 10
+        )
+    );
+
+    store.apply(
+        make_uint_update(
+            1, 3, 2, 2, 20
+        )
+    );
+
+    store.apply(
+        make_uint_update(
+            1, 3, 1, 3, 30
+        )
+    );
+
+    store.apply(
+        make_uint_update(
+            1, 2, 9, 4, 40
+        )
+    );
+
+    const auto snapshot = store.snapshot();
+
+    ASSERT_EQ(snapshot.sequence, 4);
+    ASSERT_EQ(snapshot.updates.size(), 4);
+
+    EXPECT_EQ(snapshot.updates[0].table_id, 1);
+    EXPECT_EQ(snapshot.updates[0].row_id, 2);
+    EXPECT_EQ(snapshot.updates[0].column_id, 9);
+
+    EXPECT_EQ(snapshot.updates[1].table_id, 1);
+    EXPECT_EQ(snapshot.updates[1].row_id, 3);
+    EXPECT_EQ(snapshot.updates[1].column_id, 1);
+
+    EXPECT_EQ(snapshot.updates[2].table_id, 1);
+    EXPECT_EQ(snapshot.updates[2].row_id, 3);
+    EXPECT_EQ(snapshot.updates[2].column_id, 2);
+
+    EXPECT_EQ(snapshot.updates[3].table_id, 2);
+    EXPECT_EQ(snapshot.updates[3].row_id, 1);
+    EXPECT_EQ(snapshot.updates[3].column_id, 1);
+}
+
+TEST(StateStore, RejectsZeroSequencePublication) {
+    pulsegrid::StateStore store;
+
+    const pulsegrid::Update update{
+        .table_id = 1,
+        .row_id = 1,
+        .column_id = 1,
+        .type = pulsegrid::ValueType::UInt64,
+        .sequence = 0,
+        .payload = 42
+    };
+
+    EXPECT_THROW(
+        store.apply(update),
+        pulsegrid::SequenceError
+    );
+
+    EXPECT_EQ(store.size(), 0U);
+    EXPECT_FALSE(store.last_sequence().has_value());
 }

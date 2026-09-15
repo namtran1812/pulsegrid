@@ -31,15 +31,14 @@ std::string unique_shm_name() {
 }
 
 pulsegrid::Update make_update(
-    std::uint32_t sequence
+    std::uint64_t sequence
 ) {
     return {
         .table_id = 1,
-        .row_id = sequence % 1000,
+        .row_id = static_cast<std::uint32_t>(sequence % 1000),
         .column_id = 1,
         .type = pulsegrid::ValueType::UInt64,
         .sequence = sequence,
-        .timestamp_ns = 0,
         .payload = sequence
     };
 }

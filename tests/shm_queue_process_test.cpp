@@ -82,17 +82,16 @@ TEST(ShmQueueProcess, TransfersOrderedUpdatesAcrossProcesses) {
         }
     }
 
-    for (std::uint32_t sequence = 0;
+    for (std::uint64_t sequence = 0;
          sequence < kMessages;
          ++sequence) {
 
         pulsegrid::Update update{
             .table_id = 1,
-            .row_id = sequence % 1000,
+            .row_id = static_cast<std::uint32_t>(sequence % 1000),
             .column_id = 1,
             .type = pulsegrid::ValueType::UInt64,
             .sequence = sequence,
-            .timestamp_ns = 0,
             .payload = sequence
         };
 

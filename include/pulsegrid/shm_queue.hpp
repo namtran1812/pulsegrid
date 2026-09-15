@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <new>
 #include <stdexcept>
+#include <type_traits>
 
 #include "pulsegrid/update.hpp"
 
@@ -13,7 +14,7 @@ namespace pulsegrid {
 inline constexpr std::uint64_t kShmMagic =
     0x50554C5345475244ULL;
 
-inline constexpr std::uint32_t kShmVersion = 1;
+inline constexpr std::uint32_t kShmVersion = 2;
 inline constexpr std::size_t kShmCacheLine = 64;
 
 enum class InitState : std::uint32_t {
@@ -33,6 +34,9 @@ struct alignas(kShmCacheLine) ShmHeader {
     std::uint32_t version{0};
     std::uint32_t capacity{0};
 
+    std::uint32_t entry_size{0};
+    std::uint32_t entry_alignment{0};
+
     std::atomic<std::uint32_t> init_state{
         static_cast<std::uint32_t>(
             InitState::Uninitialized
@@ -50,12 +54,22 @@ struct alignas(kShmCacheLine) ShmCursor {
     std::atomic<std::uint64_t> value{0};
 };
 
-template <std::size_t Capacity>
+template <
+    std::size_t Capacity,
+    typename T = Update
+>
 struct ShmQueueLayout {
     static_assert(Capacity >= 2);
+
     static_assert(
         (Capacity & (Capacity - 1)) == 0,
         "Capacity must be a power of two"
+    );
+
+    static_assert(
+        std::is_trivially_copyable_v<T>,
+        "shared-memory payload must be "
+        "trivially copyable"
     );
 
     ShmHeader header;
@@ -63,13 +77,18 @@ struct ShmQueueLayout {
     ShmCursor tail;
 
     alignas(kShmCacheLine)
-    Update entries[Capacity];
+    T entries[Capacity];
 };
 
-template <std::size_t Capacity>
+template <
+    std::size_t Capacity,
+    typename T = Update
+>
 class ShmQueue {
 public:
-    using Layout = ShmQueueLayout<Capacity>;
+    using value_type = T;
+    using Layout =
+        ShmQueueLayout<Capacity, T>;
 
     static_assert(
         std::atomic<std::uint64_t>::is_always_lock_free,
@@ -105,6 +124,12 @@ public:
         layout->header.version = kShmVersion;
         layout->header.capacity =
             static_cast<std::uint32_t>(Capacity);
+
+        layout->header.entry_size =
+            static_cast<std::uint32_t>(sizeof(T));
+
+        layout->header.entry_alignment =
+            static_cast<std::uint32_t>(alignof(T));
 
         layout->head.value.store(
             0,
@@ -175,11 +200,29 @@ public:
             );
         }
 
+        if (
+            layout->header.entry_size !=
+            sizeof(T)
+        ) {
+            throw std::runtime_error(
+                "shared-memory payload size mismatch"
+            );
+        }
+
+        if (
+            layout->header.entry_alignment !=
+            alignof(T)
+        ) {
+            throw std::runtime_error(
+                "shared-memory payload alignment mismatch"
+            );
+        }
+
         return ShmQueue(layout);
     }
 
     [[nodiscard]]
-    bool try_push(const Update& update) noexcept {
+    bool try_push(const T& update) noexcept {
         const auto head =
             layout_->head.value.load(
                 std::memory_order_relaxed
@@ -208,7 +251,7 @@ public:
 
     [[nodiscard]]
     bool try_push_batch(
-        const Update* updates,
+        const T* updates,
         std::size_t count
     ) noexcept {
         if (count == 0) {
@@ -257,7 +300,7 @@ public:
 
     [[nodiscard]]
     std::size_t try_pop_batch(
-        Update* updates,
+        T* updates,
         std::size_t max_count
     ) noexcept {
         if (max_count == 0) {
@@ -308,7 +351,7 @@ public:
     }
 
     [[nodiscard]]
-    bool try_pop(Update& update) noexcept {
+    bool try_pop(T& update) noexcept {
         const auto tail =
             layout_->tail.value.load(
                 std::memory_order_relaxed

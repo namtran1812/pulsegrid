@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -10,6 +11,7 @@
 #include <variant>
 #include <vector>
 
+#include "pulsegrid/coalesced_batch.hpp"
 #include "pulsegrid/update.hpp"
 
 namespace pulsegrid {
@@ -55,12 +57,11 @@ using CellValue =
 
 struct Cell {
     CellValue value;
-    std::uint32_t sequence;
-    std::uint64_t timestamp_ns;
+    std::uint64_t sequence;
 };
 
 struct Snapshot {
-    std::uint32_t sequence;
+    std::uint64_t sequence;
     std::vector<Update> updates;
 };
 
@@ -96,10 +97,138 @@ public:
         cells_[key] = Cell{
             .value = decode_value(update),
             .sequence = update.sequence,
-            .timestamp_ns = update.timestamp_ns
         };
 
         last_sequence_ = update.sequence;
+    }
+
+    void apply_coalesced(
+        const CoalescedBatch& batch
+    ) {
+        if (batch.updates.empty()) {
+            if (batch.watermark != 0) {
+                throw std::runtime_error(
+                    "nonzero coalesced watermark "
+                    "has no updates"
+                );
+            }
+
+            return;
+        }
+
+        if (
+            batch.first_sequence == 0 ||
+            batch.first_sequence >
+                batch.watermark
+        ) {
+            throw std::runtime_error(
+                "invalid coalesced sequence range"
+            );
+        }
+
+        if (last_sequence_) {
+            const auto expected =
+                *last_sequence_ + 1;
+
+            if (
+                batch.first_sequence != expected
+            ) {
+                throw SequenceGap(
+                    "coalesced batch does not "
+                    "continue current stream"
+                );
+            }
+        }
+
+        if (
+            last_sequence_ &&
+            batch.watermark <= *last_sequence_
+        ) {
+            throw StaleSequence(
+                "stale coalesced watermark"
+            );
+        }
+
+        std::unordered_map<
+            CellKey,
+            bool,
+            CellKeyHash
+        > seen;
+
+        seen.reserve(batch.updates.size());
+
+        bool contains_watermark = false;
+
+        for (const auto& update :
+             batch.updates) {
+
+            if (update.sequence == batch.watermark) {
+                contains_watermark = true;
+            }
+
+            if (
+                update.sequence >
+                batch.watermark
+            ) {
+                throw std::runtime_error(
+                    "coalesced update exceeds "
+                    "batch watermark"
+                );
+            }
+
+            if (
+                last_sequence_ &&
+                update.sequence <=
+                    *last_sequence_
+            ) {
+                throw StaleSequence(
+                    "coalesced update is not "
+                    "newer than current state"
+                );
+            }
+
+            const CellKey key{
+                .table_id = update.table_id,
+                .row_id = update.row_id,
+                .column_id = update.column_id
+            };
+
+            if (seen.contains(key)) {
+                throw std::runtime_error(
+                    "duplicate cell in "
+                    "coalesced batch"
+                );
+            }
+
+            seen.emplace(key, true);
+
+            // Validate type before mutating anything.
+            (void)decode_value(update);
+        }
+
+        if (!contains_watermark) {
+            throw std::runtime_error(
+                "coalesced batch does not contain "
+                "its watermark update"
+            );
+        }
+
+        for (const auto& update :
+             batch.updates) {
+
+            const CellKey key{
+                .table_id = update.table_id,
+                .row_id = update.row_id,
+                .column_id = update.column_id
+            };
+
+            cells_[key] = Cell{
+                .value = decode_value(update),
+                .sequence = update.sequence,
+            };
+        }
+
+        last_sequence_ = batch.watermark;
     }
 
     [[nodiscard]]
@@ -130,7 +259,7 @@ public:
     }
 
     [[nodiscard]]
-    std::optional<std::uint32_t>
+    std::optional<std::uint64_t>
     last_sequence() const noexcept {
         return last_sequence_;
     }
@@ -182,8 +311,6 @@ public:
                         decode_value(update),
                     .sequence =
                         update.sequence,
-                    .timestamp_ns =
-                        update.timestamp_ns
                 }
             );
         }
@@ -214,13 +341,47 @@ public:
             );
         }
 
+        // Snapshots have a canonical wire order
+        // independent of unordered_map iteration.
+        std::sort(
+            result.updates.begin(),
+            result.updates.end(),
+            [](const Update& lhs,
+               const Update& rhs) {
+                if (
+                    lhs.table_id !=
+                    rhs.table_id
+                ) {
+                    return lhs.table_id <
+                           rhs.table_id;
+                }
+
+                if (
+                    lhs.row_id !=
+                    rhs.row_id
+                ) {
+                    return lhs.row_id <
+                           rhs.row_id;
+                }
+
+                return lhs.column_id <
+                       rhs.column_id;
+            }
+        );
+
         return result;
     }
 
 private:
     void validate_sequence(
-        std::uint32_t sequence
+        std::uint64_t sequence
     ) const {
+        if (sequence == 0) {
+            throw SequenceError(
+                "sequence zero is reserved"
+            );
+        }
+
         if (!last_sequence_) {
             return;
         }
@@ -232,9 +393,7 @@ private:
         }
 
         const auto expected =
-            static_cast<std::uint32_t>(
-                *last_sequence_ + 1
-            );
+            *last_sequence_ + 1;
 
         if (sequence != expected) {
             throw SequenceGap(
@@ -276,8 +435,6 @@ private:
             .column_id = key.column_id,
             .type = ValueType::UInt64,
             .sequence = cell.sequence,
-            .timestamp_ns =
-                cell.timestamp_ns,
             .payload = 0
         };
 
@@ -336,7 +493,7 @@ private:
         CellKeyHash
     > cells_;
 
-    std::optional<std::uint32_t>
+    std::optional<std::uint64_t>
         last_sequence_;
 };
 

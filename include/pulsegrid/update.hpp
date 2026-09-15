@@ -18,13 +18,12 @@ struct alignas(32) Update {
     std::uint16_t column_id;
     ValueType type;
 
-    std::uint32_t sequence;
-
-    std::uint64_t timestamp_ns;
+    std::uint64_t sequence;
     std::uint64_t payload;
 };
 
 static_assert(sizeof(Update) == 32);
+static_assert(alignof(Update) == 32);
 static_assert(std::is_trivially_copyable_v<Update>);
 
 } // namespace pulsegrid

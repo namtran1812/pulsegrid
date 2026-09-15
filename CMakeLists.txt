@@ -58,6 +58,11 @@ if(BUILD_TESTING)
         tests/shm_queue_process_test.cpp
         tests/shm_queue_batch_test.cpp
         tests/state_store_test.cpp
+        tests/coalescing_buffer_test.cpp
+        tests/transport_frame_test.cpp
+        tests/frame_codec_test.cpp
+        tests/backpressure_publisher_test.cpp
+        tests/shm_frame_process_test.cpp
     )
 
     target_link_libraries(pulsegrid_tests

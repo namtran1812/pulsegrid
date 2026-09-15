@@ -1,6 +1,7 @@
 #include "pulsegrid/shm_region.hpp"
 
 #include <cerrno>
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
 #include <utility>
@@ -71,6 +72,49 @@ ShmRegion::ShmRegion(
             ::shm_unlink(name_.c_str());
 
             throw error;
+        }
+    } else {
+        struct stat status {};
+
+        if (::fstat(fd_, &status) == -1) {
+            const auto error =
+                system_error("fstat");
+
+            reset();
+
+            throw error;
+        }
+
+        if (status.st_size < 0) {
+            reset();
+
+            throw std::runtime_error(
+                "shared-memory object has invalid size"
+            );
+        }
+
+        const auto actual_size =
+            static_cast<std::uintmax_t>(
+                status.st_size
+            );
+
+        const auto requested_size =
+            static_cast<std::uintmax_t>(
+                size_
+            );
+
+        if (actual_size < requested_size) {
+            const auto message =
+                std::string(
+                    "shared-memory object is too small: actual="
+                ) +
+                std::to_string(actual_size) +
+                " requested=" +
+                std::to_string(requested_size);
+
+            reset();
+
+            throw std::runtime_error(message);
         }
     }
 
