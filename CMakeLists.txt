@@ -63,8 +63,8 @@ if(BUILD_TESTING)
         tests/frame_codec_test.cpp
         tests/backpressure_publisher_test.cpp
         tests/shm_frame_process_test.cpp
-    tests/shm_epoch_test.cpp
-    tests/shm_restart_recovery_test.cpp
+        tests/shm_epoch_test.cpp
+        tests/shm_restart_recovery_test.cpp
     )
 
     target_link_libraries(pulsegrid_tests
