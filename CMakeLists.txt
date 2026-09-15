@@ -54,6 +54,8 @@ if(BUILD_TESTING)
     add_executable(pulsegrid_tests
         tests/ring_buffer_test.cpp
         tests/wraparound_test.cpp
+        tests/shm_region_test.cpp
+        tests/shm_queue_process_test.cpp
     )
 
     target_link_libraries(pulsegrid_tests
