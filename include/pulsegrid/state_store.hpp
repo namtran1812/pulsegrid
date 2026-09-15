@@ -61,6 +61,7 @@ struct Cell {
 };
 
 struct Snapshot {
+    std::uint64_t epoch;
     std::uint64_t sequence;
     std::vector<Update> updates;
 };
@@ -83,9 +84,26 @@ public:
     using SequenceError::SequenceError;
 };
 
+class EpochMismatch
+    : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
 class StateStore {
 public:
+    static constexpr std::uint64_t
+        kLegacyEpoch = 1;
+
     void apply(const Update& update) {
+        apply(kLegacyEpoch, update);
+    }
+
+    void apply(
+        std::uint64_t epoch,
+        const Update& update
+    ) {
+        validate_epoch(epoch);
         validate_sequence(update.sequence);
 
         const CellKey key{
@@ -99,12 +117,21 @@ public:
             .sequence = update.sequence,
         };
 
+        epoch_ = epoch;
         last_sequence_ = update.sequence;
     }
 
     void apply_coalesced(
         const CoalescedBatch& batch
     ) {
+        apply_coalesced(kLegacyEpoch, batch);
+    }
+
+    void apply_coalesced(
+        std::uint64_t epoch,
+        const CoalescedBatch& batch
+    ) {
+        validate_epoch(epoch);
         if (batch.updates.empty()) {
             if (batch.watermark != 0) {
                 throw std::runtime_error(
@@ -228,7 +255,14 @@ public:
             };
         }
 
+        epoch_ = epoch;
         last_sequence_ = batch.watermark;
+    }
+
+    [[nodiscard]]
+    std::optional<std::uint64_t>
+    epoch() const noexcept {
+        return epoch_;
     }
 
     [[nodiscard]]
@@ -271,11 +305,28 @@ public:
         StateStore store;
 
         if (
+            snapshot.epoch == 0 &&
             snapshot.sequence == 0 &&
-            !snapshot.updates.empty()
+            snapshot.updates.empty()
         ) {
+            return store;
+        }
+
+        if (snapshot.epoch == 0) {
             throw std::runtime_error(
-                "non-empty snapshot has zero sequence"
+                "non-empty publication history has zero epoch"
+            );
+        }
+
+        if (snapshot.sequence == 0) {
+            throw std::runtime_error(
+                "non-empty publication history has zero sequence"
+            );
+        }
+
+        if (snapshot.updates.empty()) {
+            throw std::runtime_error(
+                "nonzero snapshot watermark has no state"
             );
         }
 
@@ -315,10 +366,8 @@ public:
             );
         }
 
-        if (snapshot.sequence != 0) {
-            store.last_sequence_ =
-                snapshot.sequence;
-        }
+        store.epoch_ = snapshot.epoch;
+        store.last_sequence_ = snapshot.sequence;
 
         return store;
     }
@@ -326,6 +375,7 @@ public:
     [[nodiscard]]
     Snapshot snapshot() const {
         Snapshot result{
+            .epoch = epoch_.value_or(0),
             .sequence =
                 last_sequence_.value_or(0),
             .updates = {}
@@ -373,6 +423,25 @@ public:
     }
 
 private:
+    void validate_epoch(
+        std::uint64_t epoch
+    ) const {
+        if (epoch == 0) {
+            throw EpochMismatch(
+                "epoch zero is reserved"
+            );
+        }
+
+        if (
+            epoch_ &&
+            epoch != *epoch_
+        ) {
+            throw EpochMismatch(
+                "publication epoch does not match current state"
+            );
+        }
+    }
+
     void validate_sequence(
         std::uint64_t sequence
     ) const {
@@ -492,6 +561,9 @@ private:
         Cell,
         CellKeyHash
     > cells_;
+
+    std::optional<std::uint64_t>
+        epoch_;
 
     std::optional<std::uint64_t>
         last_sequence_;

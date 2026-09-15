@@ -2,14 +2,26 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "pulsegrid/coalesced_batch.hpp"
 #include "pulsegrid/transport_frame.hpp"
 
 namespace pulsegrid {
+
+struct DecodedDelta {
+    std::uint64_t epoch{0};
+    Update update{};
+};
+
+struct DecodedCoalesced {
+    std::uint64_t epoch{0};
+    CoalescedBatch batch{};
+};
 
 inline TransportFrame encode_delta(
     const Update& update
@@ -31,7 +43,11 @@ encode_coalesced(
         batch.updates.empty() ||
         batch.first_sequence == 0 ||
         batch.first_sequence >
-            batch.watermark
+            batch.watermark ||
+        batch.updates.size() >
+            std::numeric_limits<
+                std::uint32_t
+            >::max()
     ) {
         throw std::runtime_error(
             "invalid coalesced batch"
@@ -85,10 +101,40 @@ encode_coalesced(
 class FrameDecoder {
 public:
     struct Result {
-        std::optional<Update> delta;
-        std::optional<CoalescedBatch>
+        std::optional<DecodedDelta> delta;
+        std::optional<DecodedCoalesced>
             coalesced;
     };
+
+    explicit FrameDecoder(
+        std::uint64_t epoch = 1
+    ) {
+        bind_epoch(epoch);
+    }
+
+    [[nodiscard]]
+    std::uint64_t epoch() const noexcept {
+        return epoch_;
+    }
+
+    // Rebinding is only legal while no coalesced
+    // transaction is partially decoded.
+    void bind_epoch(std::uint64_t epoch) {
+        if (epoch == 0) {
+            throw std::runtime_error(
+                "decoder epoch zero is reserved"
+            );
+        }
+
+        if (active_) {
+            throw std::runtime_error(
+                "cannot rebind decoder during "
+                "coalesced batch"
+            );
+        }
+
+        epoch_ = epoch;
+    }
 
     [[nodiscard]]
     Result consume(
@@ -152,7 +198,10 @@ private:
         }
 
         return {
-            .delta = frame.update,
+            .delta = DecodedDelta{
+                .epoch = epoch_,
+                .update = frame.update
+            },
             .coalesced = std::nullopt
         };
     }
@@ -242,12 +291,17 @@ private:
             .updates = std::move(updates_)
         };
 
+        const auto completed_epoch =
+            epoch_;
+
         reset();
 
         return {
             .delta = std::nullopt,
-            .coalesced =
-                std::move(batch)
+            .coalesced = DecodedCoalesced{
+                .epoch = completed_epoch,
+                .batch = std::move(batch)
+            }
         };
     }
 
@@ -277,6 +331,7 @@ private:
 
     bool active_{false};
 
+    std::uint64_t epoch_{1};
     std::uint64_t first_sequence_{0};
     std::uint64_t watermark_{0};
     std::size_t expected_count_{0};

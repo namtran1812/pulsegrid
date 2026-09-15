@@ -96,7 +96,7 @@ public:
     }
 
     [[nodiscard]]
-    std::uint32_t
+    std::uint64_t
     pending_watermark() const noexcept {
         const auto sequence =
             pending_.last_sequence();

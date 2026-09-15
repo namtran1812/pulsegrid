@@ -19,6 +19,8 @@
 namespace {
 
 constexpr std::size_t kCapacity = 8;
+constexpr std::uint64_t kPublicationEpoch =
+    0xA11CE2026ULL;
 
 using Queue = pulsegrid::ShmQueue<
     kCapacity,
@@ -74,7 +76,15 @@ TEST(
     };
 
     auto producer_queue =
-        Queue::initialize(region.data());
+        Queue::initialize(
+            region.data(),
+            kPublicationEpoch
+        );
+
+    EXPECT_EQ(
+        producer_queue.publication_epoch(),
+        kPublicationEpoch
+    );
 
     /*
      * Gate the child with a pipe. This lets the
@@ -135,7 +145,9 @@ TEST(
 
             ::close(start_pipe[0]);
 
-            pulsegrid::FrameDecoder decoder;
+            pulsegrid::FrameDecoder decoder(
+                consumer_queue.publication_epoch()
+            );
             pulsegrid::StateStore store;
 
             constexpr std::uint32_t
@@ -160,12 +172,16 @@ TEST(
                     decoder.consume(frame);
 
                 if (result.delta) {
-                    store.apply(*result.delta);
+                    store.apply(
+                        result.delta->epoch,
+                        result.delta->update
+                    );
                 }
 
                 if (result.coalesced) {
                     store.apply_coalesced(
-                        *result.coalesced
+                        result.coalesced->epoch,
+                        result.coalesced->batch
                     );
                 }
 

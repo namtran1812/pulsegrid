@@ -291,7 +291,10 @@ TEST(BackpressurePublisher, FlushesAtomicCoalescedTransaction) {
             decoder.consume(frame);
 
         ASSERT_TRUE(result.delta);
-        store.apply(*result.delta);
+        store.apply(
+            result.delta->epoch,
+            result.delta->update
+        );
     }
 
     ASSERT_TRUE(store.last_sequence());
@@ -316,12 +319,16 @@ TEST(BackpressurePublisher, FlushesAtomicCoalescedTransaction) {
             decoder.consume(frame);
 
         if (result.delta) {
-            store.apply(*result.delta);
+            store.apply(
+            result.delta->epoch,
+            result.delta->update
+        );
         }
 
         if (result.coalesced) {
             store.apply_coalesced(
-                *result.coalesced
+                result.coalesced->epoch,
+                result.coalesced->batch
             );
         }
     }

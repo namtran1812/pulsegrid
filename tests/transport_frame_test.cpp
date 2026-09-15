@@ -196,3 +196,15 @@ TEST(
         }
     );
 }
+
+TEST(TransportFrame, RemainsSingleCacheLine) {
+    EXPECT_EQ(
+        sizeof(pulsegrid::TransportFrame),
+        64U
+    );
+
+    EXPECT_EQ(
+        alignof(pulsegrid::TransportFrame),
+        32U
+    );
+}

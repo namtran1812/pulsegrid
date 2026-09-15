@@ -47,12 +47,12 @@ TEST(FrameCodec, DeltaRoundTrips) {
     EXPECT_FALSE(result.coalesced);
 
     EXPECT_EQ(
-        result.delta->sequence,
+        result.delta->update.sequence,
         42
     );
 
     EXPECT_EQ(
-        result.delta->payload,
+        result.delta->update.payload,
         999
     );
 }
@@ -86,9 +86,7 @@ TEST(FrameCodec, CoalescedBatchRoundTrips) {
 
         if (result.coalesced) {
             decoded =
-                std::move(
-                    result.coalesced
-                );
+                std::move(result.coalesced->batch);
         }
     }
 
@@ -199,7 +197,8 @@ TEST(FrameCodec, DecodedBatchAppliesAtomically) {
 
         if (result.coalesced) {
             store.apply_coalesced(
-                *result.coalesced
+                result.coalesced->epoch,
+                result.coalesced->batch
             );
         }
     }
@@ -350,7 +349,7 @@ TEST(
             );
 
             decoded_batch =
-                std::move(result.coalesced);
+                std::move(result.coalesced->batch);
         }
     }
 
@@ -419,11 +418,14 @@ TEST(
     EXPECT_FALSE(result.coalesced.has_value());
 
     EXPECT_EQ(
-        result.delta->sequence,
+        result.delta->update.sequence,
         kAfterBoundary3
     );
 
-    restored.apply(*result.delta);
+    restored.apply(
+        result.delta->epoch,
+        result.delta->update
+    );
 
     ASSERT_TRUE(
         restored.last_sequence().has_value()
@@ -432,5 +434,209 @@ TEST(
     EXPECT_EQ(
         *restored.last_sequence(),
         kAfterBoundary3
+    );
+}
+
+TEST(FrameCodecEpoch, DeltaCarriesBoundEpoch) {
+    constexpr std::uint64_t kEpoch = 42;
+
+    pulsegrid::FrameDecoder decoder(kEpoch);
+
+    const auto frame =
+        pulsegrid::encode_delta(
+            update(1, 1, 100)
+        );
+
+    const auto result =
+        decoder.consume(frame);
+
+    ASSERT_TRUE(result.delta);
+    EXPECT_FALSE(result.coalesced);
+
+    EXPECT_EQ(result.delta->epoch, kEpoch);
+    EXPECT_EQ(
+        result.delta->update.sequence,
+        1U
+    );
+    EXPECT_EQ(
+        result.delta->update.payload,
+        100U
+    );
+}
+
+TEST(FrameCodecEpoch, CoalescedBatchCarriesBoundEpoch) {
+    constexpr std::uint64_t kEpoch = 99;
+
+    const pulsegrid::CoalescedBatch batch{
+        .first_sequence = 10,
+        .watermark = 12,
+        .updates = {
+            update(1, 11, 110),
+            update(2, 12, 120)
+        }
+    };
+
+    const auto frames =
+        pulsegrid::encode_coalesced(batch);
+
+    pulsegrid::FrameDecoder decoder(kEpoch);
+
+    std::optional<
+        pulsegrid::DecodedCoalesced
+    > decoded;
+
+    for (const auto& frame : frames) {
+        auto result =
+            decoder.consume(frame);
+
+        if (result.coalesced) {
+            decoded =
+                std::move(result.coalesced);
+        }
+    }
+
+    ASSERT_TRUE(decoded);
+    EXPECT_EQ(decoded->epoch, kEpoch);
+    EXPECT_EQ(
+        decoded->batch.first_sequence,
+        10U
+    );
+    EXPECT_EQ(
+        decoded->batch.watermark,
+        12U
+    );
+    EXPECT_EQ(
+        decoded->batch.updates.size(),
+        2U
+    );
+}
+
+TEST(FrameCodecEpoch, RejectsZeroEpoch) {
+    EXPECT_THROW(
+        (void)pulsegrid::FrameDecoder(0),
+        std::runtime_error
+    );
+}
+
+TEST(FrameCodecEpoch, RebindsBetweenTransactions) {
+    pulsegrid::FrameDecoder decoder(10);
+
+    {
+        const auto result =
+            decoder.consume(
+                pulsegrid::encode_delta(
+                    update(1, 1, 100)
+                )
+            );
+
+        ASSERT_TRUE(result.delta);
+        EXPECT_EQ(result.delta->epoch, 10U);
+    }
+
+    EXPECT_NO_THROW(
+        decoder.bind_epoch(20)
+    );
+
+    {
+        const auto result =
+            decoder.consume(
+                pulsegrid::encode_delta(
+                    update(2, 1, 200)
+                )
+            );
+
+        ASSERT_TRUE(result.delta);
+        EXPECT_EQ(result.delta->epoch, 20U);
+    }
+}
+
+TEST(FrameCodecEpoch, RejectsRebindDuringBatch) {
+    const pulsegrid::CoalescedBatch batch{
+        .first_sequence = 1,
+        .watermark = 2,
+        .updates = {
+            update(1, 1, 100),
+            update(2, 2, 200)
+        }
+    };
+
+    const auto frames =
+        pulsegrid::encode_coalesced(batch);
+
+    pulsegrid::FrameDecoder decoder(10);
+
+    (void)decoder.consume(frames.front());
+
+    ASSERT_TRUE(decoder.in_batch());
+
+    EXPECT_THROW(
+        decoder.bind_epoch(20),
+        std::runtime_error
+    );
+
+    EXPECT_EQ(decoder.epoch(), 10U);
+    EXPECT_TRUE(decoder.in_batch());
+}
+
+TEST(FrameCodecEpoch, StateStoreRejectsOldEpochAfterRecovery) {
+    pulsegrid::FrameDecoder old_decoder(10);
+
+    auto old_result =
+        old_decoder.consume(
+            pulsegrid::encode_delta(
+                update(1, 1, 100)
+            )
+        );
+
+    ASSERT_TRUE(old_result.delta);
+
+    pulsegrid::StateStore old_store;
+    old_store.apply(
+        old_result.delta->epoch,
+        old_result.delta->update
+    );
+
+    pulsegrid::StateStore replacement;
+    replacement.apply(
+        20,
+        update(9, 1, 900)
+    );
+
+    auto recovered =
+        pulsegrid::StateStore::restore(
+            replacement.snapshot()
+        );
+
+    ASSERT_TRUE(recovered.epoch());
+    EXPECT_EQ(*recovered.epoch(), 20U);
+
+    auto delayed_old =
+        old_decoder.consume(
+            pulsegrid::encode_delta(
+                update(2, 2, 200)
+            )
+        );
+
+    ASSERT_TRUE(delayed_old.delta);
+
+    EXPECT_THROW(
+        recovered.apply(
+            delayed_old.delta->epoch,
+            delayed_old.delta->update
+        ),
+        pulsegrid::EpochMismatch
+    );
+
+    ASSERT_TRUE(recovered.epoch());
+    EXPECT_EQ(*recovered.epoch(), 20U);
+
+    ASSERT_TRUE(recovered.last_sequence());
+    EXPECT_EQ(
+        *recovered.last_sequence(),
+        1U
+    );
+
+    EXPECT_FALSE(
+        recovered.get(1, 2, 1)
     );
 }

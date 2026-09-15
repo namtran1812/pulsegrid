@@ -622,6 +622,7 @@ TEST(StateStore, DetectsMissingDeltaDuringReplay) {
 
 TEST(StateStore, RejectsSnapshotCellBeyondWatermark) {
     pulsegrid::Snapshot snapshot{
+        .epoch = pulsegrid::StateStore::kLegacyEpoch,
         .sequence = 100,
         .updates = {
             make_uint_update(
@@ -640,6 +641,7 @@ TEST(StateStore, RejectsSnapshotCellBeyondWatermark) {
 
 TEST(StateStore, RejectsDuplicateCellsInSnapshot) {
     pulsegrid::Snapshot snapshot{
+        .epoch = pulsegrid::StateStore::kLegacyEpoch,
         .sequence = 100,
         .updates = {
             make_uint_update(
@@ -661,6 +663,7 @@ TEST(StateStore, RejectsDuplicateCellsInSnapshot) {
 
 TEST(StateStore, RejectsNonEmptyZeroSequenceSnapshot) {
     pulsegrid::Snapshot snapshot{
+        .epoch = pulsegrid::StateStore::kLegacyEpoch,
         .sequence = 0,
         .updates = {
             make_uint_update(
@@ -679,6 +682,7 @@ TEST(StateStore, RejectsNonEmptyZeroSequenceSnapshot) {
 
 TEST(StateStore, RestoresEmptySnapshot) {
     const pulsegrid::Snapshot snapshot{
+        .epoch = 0,
         .sequence = 0,
         .updates = {}
     };
@@ -760,4 +764,236 @@ TEST(StateStore, RejectsZeroSequencePublication) {
 
     EXPECT_EQ(store.size(), 0U);
     EXPECT_FALSE(store.last_sequence().has_value());
+}
+
+TEST(StateStoreEpoch, FirstPublicationBindsEpoch) {
+    pulsegrid::StateStore store;
+
+    store.apply(
+        42,
+        make_uint_update(
+            1, 1, 1, 1, 100
+        )
+    );
+
+    ASSERT_TRUE(store.epoch());
+    EXPECT_EQ(*store.epoch(), 42U);
+
+    ASSERT_TRUE(store.last_sequence());
+    EXPECT_EQ(*store.last_sequence(), 1U);
+}
+
+TEST(StateStoreEpoch, RejectsZeroEpochAtomically) {
+    pulsegrid::StateStore store;
+
+    EXPECT_THROW(
+        store.apply(
+            0,
+            make_uint_update(
+                1, 1, 1, 1, 100
+            )
+        ),
+        pulsegrid::EpochMismatch
+    );
+
+    EXPECT_FALSE(store.epoch());
+    EXPECT_FALSE(store.last_sequence());
+    EXPECT_EQ(store.size(), 0U);
+}
+
+TEST(StateStoreEpoch, RejectsDifferentEpochAtomically) {
+    pulsegrid::StateStore store;
+
+    store.apply(
+        100,
+        make_uint_update(
+            1, 1, 1, 1, 100
+        )
+    );
+
+    EXPECT_THROW(
+        store.apply(
+            200,
+            make_uint_update(
+                1, 2, 1, 1, 200
+            )
+        ),
+        pulsegrid::EpochMismatch
+    );
+
+    ASSERT_TRUE(store.epoch());
+    EXPECT_EQ(*store.epoch(), 100U);
+
+    ASSERT_TRUE(store.last_sequence());
+    EXPECT_EQ(*store.last_sequence(), 1U);
+
+    EXPECT_EQ(store.size(), 1U);
+    EXPECT_FALSE(store.get(1, 2, 1));
+}
+
+TEST(StateStoreEpoch, SameEpochContinuesNormally) {
+    pulsegrid::StateStore store;
+
+    store.apply(
+        77,
+        make_uint_update(
+            1, 1, 1, 1, 100
+        )
+    );
+
+    EXPECT_NO_THROW(
+        store.apply(
+            77,
+            make_uint_update(
+                1, 2, 1, 2, 200
+            )
+        )
+    );
+
+    ASSERT_TRUE(store.epoch());
+    EXPECT_EQ(*store.epoch(), 77U);
+
+    ASSERT_TRUE(store.last_sequence());
+    EXPECT_EQ(*store.last_sequence(), 2U);
+}
+
+TEST(StateStoreEpoch, SnapshotPreservesEpoch) {
+    pulsegrid::StateStore store;
+
+    store.apply(
+        1234,
+        make_uint_update(
+            1, 1, 1, 1, 100
+        )
+    );
+
+    store.apply(
+        1234,
+        make_uint_update(
+            1, 2, 1, 2, 200
+        )
+    );
+
+    const auto snapshot = store.snapshot();
+
+    EXPECT_EQ(snapshot.epoch, 1234U);
+    EXPECT_EQ(snapshot.sequence, 2U);
+
+    auto restored =
+        pulsegrid::StateStore::restore(snapshot);
+
+    ASSERT_TRUE(restored.epoch());
+    EXPECT_EQ(*restored.epoch(), 1234U);
+
+    ASSERT_TRUE(restored.last_sequence());
+    EXPECT_EQ(*restored.last_sequence(), 2U);
+}
+
+TEST(StateStoreEpoch, RecoveryCanEstablishNewEpoch) {
+    pulsegrid::StateStore old_store;
+
+    old_store.apply(
+        10,
+        make_uint_update(
+            1, 1, 1, 1, 100
+        )
+    );
+
+    EXPECT_THROW(
+        old_store.apply(
+            20,
+            make_uint_update(
+                1, 2, 1, 1, 200
+            )
+        ),
+        pulsegrid::EpochMismatch
+    );
+
+    pulsegrid::StateStore replacement;
+
+    replacement.apply(
+        20,
+        make_uint_update(
+            1, 9, 1, 1, 900
+        )
+    );
+
+    const auto recovery_snapshot =
+        replacement.snapshot();
+
+    auto recovered =
+        pulsegrid::StateStore::restore(
+            recovery_snapshot
+        );
+
+    ASSERT_TRUE(recovered.epoch());
+    EXPECT_EQ(*recovered.epoch(), 20U);
+
+    EXPECT_NO_THROW(
+        recovered.apply(
+            20,
+            make_uint_update(
+                1, 10, 1, 2, 1000
+            )
+        )
+    );
+
+    EXPECT_THROW(
+        recovered.apply(
+            10,
+            make_uint_update(
+                1, 11, 1, 2, 1100
+            )
+        ),
+        pulsegrid::EpochMismatch
+    );
+
+    ASSERT_TRUE(recovered.last_sequence());
+    EXPECT_EQ(*recovered.last_sequence(), 2U);
+    EXPECT_FALSE(recovered.get(1, 11, 1));
+}
+
+TEST(StateStoreEpoch, CoalescedBatchMustMatchEpoch) {
+    pulsegrid::StateStore store;
+
+    store.apply(
+        50,
+        make_uint_update(
+            1, 1, 1, 100, 100
+        )
+    );
+
+    const pulsegrid::CoalescedBatch batch{
+        .first_sequence = 101,
+        .watermark = 102,
+        .updates = {
+            make_uint_update(
+                1, 2, 1, 101, 200
+            ),
+            make_uint_update(
+                1, 3, 1, 102, 300
+            )
+        }
+    };
+
+    EXPECT_THROW(
+        store.apply_coalesced(51, batch),
+        pulsegrid::EpochMismatch
+    );
+
+    ASSERT_TRUE(store.epoch());
+    EXPECT_EQ(*store.epoch(), 50U);
+
+    ASSERT_TRUE(store.last_sequence());
+    EXPECT_EQ(*store.last_sequence(), 100U);
+
+    EXPECT_FALSE(store.get(1, 2, 1));
+    EXPECT_FALSE(store.get(1, 3, 1));
+
+    EXPECT_NO_THROW(
+        store.apply_coalesced(50, batch)
+    );
+
+    ASSERT_TRUE(store.last_sequence());
+    EXPECT_EQ(*store.last_sequence(), 102U);
 }

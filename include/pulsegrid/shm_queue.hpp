@@ -14,7 +14,7 @@ namespace pulsegrid {
 inline constexpr std::uint64_t kShmMagic =
     0x50554C5345475244ULL;
 
-inline constexpr std::uint32_t kShmVersion = 2;
+inline constexpr std::uint32_t kShmVersion = 3;
 inline constexpr std::size_t kShmCacheLine = 64;
 
 enum class InitState : std::uint32_t {
@@ -48,6 +48,8 @@ struct alignas(kShmCacheLine) ShmHeader {
             ConsumerState::Disconnected
         )
     };
+
+    std::uint64_t publication_epoch{0};
 };
 
 struct alignas(kShmCacheLine) ShmCursor {
@@ -105,9 +107,22 @@ public:
     }
 
     static ShmQueue initialize(void* memory) {
+        return initialize(memory, 1);
+    }
+
+    static ShmQueue initialize(
+        void* memory,
+        std::uint64_t publication_epoch
+    ) {
         if (memory == nullptr) {
             throw std::invalid_argument(
                 "null shared memory"
+            );
+        }
+
+        if (publication_epoch == 0) {
+            throw std::invalid_argument(
+                "publication epoch zero is reserved"
             );
         }
 
@@ -130,6 +145,9 @@ public:
 
         layout->header.entry_alignment =
             static_cast<std::uint32_t>(alignof(T));
+
+        layout->header.publication_epoch =
+            publication_epoch;
 
         layout->head.value.store(
             0,
@@ -218,7 +236,18 @@ public:
             );
         }
 
+        if (layout->header.publication_epoch == 0) {
+            throw std::runtime_error(
+                "shared-memory publication epoch is invalid"
+            );
+        }
+
         return ShmQueue(layout);
+    }
+
+    [[nodiscard]]
+    std::uint64_t publication_epoch() const noexcept {
+        return layout_->header.publication_epoch;
     }
 
     [[nodiscard]]
